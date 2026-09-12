@@ -1,8 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Hachemi Market — Boutique{% endblock %}
 {% block content %}
-<h1>Bienvenue chez Hachemi Market</h1>
-<p class="subtitle">Les meilleurs produits au meilleur prix.</p>
+<section class="hero">
+    <h1 class="hero-title">Ce qu'il vous faut,<br>trouvé au bon endroit.</h1>
+    <p class="hero-sub">
+        {% if products|length > 0 %}
+        {{ products|length }} produit{{ "s" if products|length != 1 else "" }} actuellement en rayon.
+        {% else %}
+        Le rayon est vide pour l'instant.
+        {% endif %}
+    </p>
+</section>
 
 {% if products|length == 0 %}
     <p class="empty">Aucun produit pour le moment. Va dans l'espace <a href="{{ url_for('admin_panel') }}">Admin</a> pour en ajouter !</p>
