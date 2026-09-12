@@ -233,5 +233,21 @@ def admin_delete(product_id):
     return redirect(url_for("admin_panel"))
 
 
+@app.route("/admin/stock/<int:product_id>", methods=["POST"])
+def admin_update_stock(product_id):
+    if not admin_required():
+        return redirect(url_for("admin_login"))
+    new_stock = request.form.get("stock", "0")
+    try:
+        stock_val = max(0, int(new_stock))
+    except ValueError:
+        stock_val = 0
+    conn = get_db()
+    conn.execute("UPDATE products SET stock = ? WHERE id=?", (stock_val, product_id))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin_panel"))
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)

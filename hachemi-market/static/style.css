@@ -477,3 +477,27 @@ form button { margin-top: 20px; width: 100%; }
 @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
 }
+
+/* --- Réapprovisionnement admin --- */
+.stock-form {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 8px;
+}
+
+.stock-form input {
+    width: 70px;
+    padding: 8px;
+}
+
+.update-btn {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.update-btn:hover { background: #B47A25; }

@@ -42,6 +42,10 @@
         {% else %}
         <p class="stock in">Stock : {{ p.stock }}</p>
         {% endif %}
+        <form method="POST" action="{{ url_for('admin_update_stock', product_id=p.id) }}" class="stock-form">
+            <input type="number" name="stock" min="0" value="{{ p.stock }}">
+            <button type="submit" class="update-btn">Mettre à jour</button>
+        </form>
         <a href="{{ url_for('admin_delete', product_id=p.id) }}" class="delete-btn" onclick="return confirm('Supprimer ce produit ?');">Supprimer</a>
     </div>
     {% endfor %}
