@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — Hachemi Market{% endblock %}
+{% block content %}
+<a href="{{ url_for('index') }}" class="back-link">&larr; Retour à la boutique</a>
+
+<div class="product-page">
+    <div class="product-image">
+        {% if product.image %}
+        <img src="{{ url_for('static', filename='uploads/' ~ product.image) }}" alt="{{ product.name }}">
+        {% else %}
+        <div class="no-image large">Pas d'image</div>
+        {% endif %}
+    </div>
+    <div class="product-info">
+        <h1>{{ product.name }}</h1>
+        <p class="price large">{{ "%.2f"|format(product.price) }} €</p>
+
+        {% if review_count > 0 %}
+        <p class="avg-rating">{{ "★" * (avg_rating|round(0, 'floor')|int) }}{{ "☆" * (5 - (avg_rating|round(0, 'floor')|int)) }}
+            <span>{{ avg_rating }}/5 ({{ review_count }} avis)</span>
+        </p>
+        {% else %}
+        <p class="avg-rating no-reviews">Aucun avis pour le moment</p>
+        {% endif %}
+
+        {% if product.stock is not none and product.stock <= 0 %}
+        <p class="stock out">Rupture de stock</p>
+        {% elif product.stock is not none %}
+        <p class="stock in">En stock ({{ product.stock }} restants)</p>
+        {% endif %}
+
+        <p class="description">{{ product.description or "Pas de description pour ce produit." }}</p>
+
+        <a href="{{ url_for('acheter', product_id=product.id) }}" class="buy-btn large">Acheter</a>
+    </div>
+</div>
+
+<section class="reviews-section">
+    <h2>Avis et commentaires ({{ review_count }})</h2>
+
+    {% if reviews|length == 0 %}
+    <p class="empty">Aucun commentaire pour l'instant. Sois le premier à donner ton avis !</p>
+    {% else %}
+    <div class="reviews-list">
+        {% for r in reviews %}
+        <div class="review-card">
+            <div class="review-header">
+                <strong>{{ r.author_name }}</strong>
+                <span class="review-stars">{{ "★" * r.rating }}{{ "☆" * (5 - r.rating) }}</span>
+                <span class="review-date">{{ r.created_at }}</span>
+            </div>
+            {% if r.comment %}
+            <p class="review-comment">{{ r.comment }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="review-form">
+        <h3>Laisser un avis</h3>
+        <form method="POST">
+            <label>Ton nom</label>
+            <input type="text" name="author_name" placeholder="Anonyme" maxlength="50">
+            <label>Note</label>
+            <select name="rating">
+                <option value="5">★★★★★ (5/5)</option>
+                <option value="4">★★★★☆ (4/5)</option>
+                <option value="3">★★★☆☆ (3/5)</option>
+                <option value="2">★★☆☆☆ (2/5)</option>
+                <option value="1">★☆☆☆☆ (1/5)</option>
+            </select>
+            <label>Commentaire</label>
+            <textarea name="comment" rows="3" placeholder="Ton avis sur ce produit..."></textarea>
+            <button type="submit" class="buy-btn">Envoyer l'avis</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

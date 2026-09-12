@@ -13,6 +13,10 @@
         <input type="text" name="name" required>
         <label>Prix (€)</label>
         <input type="number" step="0.01" min="0" name="price" required>
+        <label>Stock</label>
+        <input type="number" step="1" min="0" name="stock" value="0" required>
+        <label>Description</label>
+        <textarea name="description" rows="3" placeholder="Description du produit..."></textarea>
         <label>Image</label>
         <input type="file" name="image" accept="image/*">
         <button type="submit" class="buy-btn">Ajouter</button>
@@ -33,6 +37,11 @@
         {% endif %}
         <h3>{{ p.name }}</h3>
         <p class="price">{{ "%.2f"|format(p.price) }} €</p>
+        {% if p.stock is not none and p.stock <= 0 %}
+        <p class="stock out">Rupture de stock</p>
+        {% elif p.stock is not none %}
+        <p class="stock in">Stock : {{ p.stock }}</p>
+        {% endif %}
         <a href="{{ url_for('admin_delete', product_id=p.id) }}" class="delete-btn" onclick="return confirm('Supprimer ce produit ?');">Supprimer</a>
     </div>
     {% endfor %}

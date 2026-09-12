@@ -2,7 +2,7 @@
 {% block title %}Hachemi Market — Boutique{% endblock %}
 {% block content %}
 <h1>Bienvenue chez Hachemi Market</h1>
-<p class="subtitle">Les meilleurs produits (100% fictifs) au meilleur prix.</p>
+<p class="subtitle">Les meilleurs produits au meilleur prix.</p>
 
 {% if products|length == 0 %}
     <p class="empty">Aucun produit pour le moment. Va dans l'espace <a href="{{ url_for('admin_panel') }}">Admin</a> pour en ajouter !</p>
@@ -10,13 +10,20 @@
 <div class="grid">
     {% for p in products %}
     <div class="card">
+        <a href="{{ url_for('produit', product_id=p.id) }}" class="card-image-link">
         {% if p.image %}
         <img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" alt="{{ p.name }}">
         {% else %}
         <div class="no-image">Pas d'image</div>
         {% endif %}
-        <h3>{{ p.name }}</h3>
+        </a>
+        <h3><a href="{{ url_for('produit', product_id=p.id) }}" class="card-title-link">{{ p.name }}</a></h3>
         <p class="price">{{ "%.2f"|format(p.price) }} €</p>
+        {% if p.stock is not none and p.stock <= 0 %}
+        <p class="stock out">Rupture de stock</p>
+        {% elif p.stock is not none %}
+        <p class="stock in">En stock ({{ p.stock }})</p>
+        {% endif %}
         <a href="{{ url_for('acheter', product_id=p.id) }}" class="buy-btn">Acheter</a>
     </div>
     {% endfor %}

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Achat — {{ product.name if product else "" }}{% endblock %}
+{% block title %}Confirmation de commande{% endblock %}
 {% block content %}
 <div class="troll-box">
     {% if product %}
-    <h1>🎉 Merci pour votre "achat" !</h1>
-    <p>Vous avez "acheté" <strong>{{ product.name }}</strong> pour <strong>{{ "%.2f"|format(product.price) }} €</strong>.</p>
-    <p class="troll-text">Sauf que... rien ne s'est passé. Aucun paiement, aucune livraison. C'est un site troll 😂</p>
+    <h1>🎉 Merci pour votre commande !</h1>
+    <p>Vous avez commandé <strong>{{ product.name }}</strong> pour <strong>{{ "%.2f"|format(product.price) }} €</strong>.</p>
+    <p class="confirm-text">Votre commande a bien été enregistrée.</p>
     {% else %}
     <h1>Produit introuvable</h1>
     {% endif %}

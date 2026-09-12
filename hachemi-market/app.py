@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import os
+from datetime import datetime
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -30,12 +31,36 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             price REAL NOT NULL,
-            image TEXT
+            image TEXT,
+            description TEXT DEFAULT '',
+            stock INTEGER DEFAULT 0
         )
         """
     )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS reviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER NOT NULL,
+            author_name TEXT NOT NULL,
+            rating INTEGER NOT NULL,
+            comment TEXT,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (product_id) REFERENCES products (id)
+        )
+        """
+    )
+    # Migration douce pour les bases déjà existantes créées avant cette version
+    for column, coltype in [("description", "TEXT DEFAULT ''"), ("stock", "INTEGER DEFAULT 0")]:
+        try:
+            conn.execute(f"ALTER TABLE products ADD COLUMN {column} {coltype}")
+        except sqlite3.OperationalError:
+            pass
     conn.commit()
     conn.close()
+
+
+init_db()
 
 
 def admin_required():
@@ -50,10 +75,56 @@ def index():
     return render_template("index.html", products=products)
 
 
+@app.route("/produit/<int:product_id>", methods=["GET", "POST"])
+def produit(product_id):
+    conn = get_db()
+    product = conn.execute("SELECT * FROM products WHERE id=?", (product_id,)).fetchone()
+
+    if product is None:
+        conn.close()
+        return redirect(url_for("index"))
+
+    if request.method == "POST":
+        author_name = request.form.get("author_name", "").strip() or "Anonyme"
+        rating = request.form.get("rating", "5")
+        comment = request.form.get("comment", "").strip()
+        try:
+            rating_val = max(1, min(5, int(rating)))
+        except ValueError:
+            rating_val = 5
+        conn.execute(
+            "INSERT INTO reviews (product_id, author_name, rating, comment, created_at) VALUES (?, ?, ?, ?, ?)",
+            (product_id, author_name, rating_val, comment, datetime.now().strftime("%d/%m/%Y %H:%M")),
+        )
+        conn.commit()
+        conn.close()
+        return redirect(url_for("produit", product_id=product_id))
+
+    reviews = conn.execute(
+        "SELECT * FROM reviews WHERE product_id=? ORDER BY id DESC", (product_id,)
+    ).fetchall()
+    conn.close()
+
+    avg_rating = 0
+    if reviews:
+        avg_rating = round(sum(r["rating"] for r in reviews) / len(reviews), 1)
+
+    return render_template(
+        "produit.html",
+        product=product,
+        reviews=reviews,
+        avg_rating=avg_rating,
+        review_count=len(reviews),
+    )
+
+
 @app.route("/acheter/<int:product_id>")
 def acheter(product_id):
     conn = get_db()
     product = conn.execute("SELECT * FROM products WHERE id=?", (product_id,)).fetchone()
+    if product and product["stock"] and product["stock"] > 0:
+        conn.execute("UPDATE products SET stock = stock - 1 WHERE id=?", (product_id,))
+        conn.commit()
     conn.close()
     if product is None:
         return redirect(url_for("index"))
@@ -87,6 +158,8 @@ def admin_panel():
     if request.method == "POST":
         name = request.form.get("name", "").strip()
         price = request.form.get("price", "0")
+        description = request.form.get("description", "").strip()
+        stock = request.form.get("stock", "0")
         image_file = request.files.get("image")
         filename = None
 
@@ -106,10 +179,14 @@ def admin_panel():
                 price_val = float(price.replace(",", "."))
             except ValueError:
                 price_val = 0.0
+            try:
+                stock_val = int(stock)
+            except ValueError:
+                stock_val = 0
             conn = get_db()
             conn.execute(
-                "INSERT INTO products (name, price, image) VALUES (?, ?, ?)",
-                (name, price_val, filename),
+                "INSERT INTO products (name, price, image, description, stock) VALUES (?, ?, ?, ?, ?)",
+                (name, price_val, filename, description, stock_val),
             )
             conn.commit()
             conn.close()
@@ -132,6 +209,7 @@ def admin_delete(product_id):
         path = os.path.join(app.config["UPLOAD_FOLDER"], row["image"])
         if os.path.exists(path):
             os.remove(path)
+    conn.execute("DELETE FROM reviews WHERE product_id=?", (product_id,))
     conn.execute("DELETE FROM products WHERE id=?", (product_id,))
     conn.commit()
     conn.close()
@@ -139,5 +217,4 @@ def admin_delete(product_id):
 
 
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True, host="0.0.0.0", port=5000)
