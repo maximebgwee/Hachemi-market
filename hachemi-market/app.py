@@ -50,17 +50,28 @@ def init_db():
         )
         """
     )
-    # Migration douce pour les bases déjà existantes créées avant cette version
     for column, coltype in [("description", "TEXT DEFAULT ''"), ("stock", "INTEGER DEFAULT 0")]:
         try:
             conn.execute(f"ALTER TABLE products ADD COLUMN {column} {coltype}")
         except sqlite3.OperationalError:
             pass
+    # Les produits créés avant l'ajout du stock avaient une valeur vide (NULL).
+    # On la force à 0 pour ne jamais laisser un bouton "Acheter" actif par erreur.
+    conn.execute("UPDATE products SET stock = 0 WHERE stock IS NULL")
     conn.commit()
     conn.close()
 
 
 init_db()
+
+
+def is_sunday_promo():
+    return datetime.now().weekday() == 6
+
+
+@app.context_processor
+def inject_promo():
+    return dict(promo_active=is_sunday_promo())
 
 
 def admin_required():
@@ -122,12 +133,18 @@ def produit(product_id):
 def acheter(product_id):
     conn = get_db()
     product = conn.execute("SELECT * FROM products WHERE id=?", (product_id,)).fetchone()
-    if product and product["stock"] and product["stock"] > 0:
-        conn.execute("UPDATE products SET stock = stock - 1 WHERE id=?", (product_id,))
-        conn.commit()
-    conn.close()
+
     if product is None:
+        conn.close()
         return redirect(url_for("index"))
+
+    if product["stock"] <= 0:
+        conn.close()
+        return redirect(url_for("produit", product_id=product_id))
+
+    conn.execute("UPDATE products SET stock = stock - 1 WHERE id=? AND stock > 0", (product_id,))
+    conn.commit()
+    conn.close()
     return render_template("acheter.html", product=product)
 
 
@@ -180,7 +197,7 @@ def admin_panel():
             except ValueError:
                 price_val = 0.0
             try:
-                stock_val = int(stock)
+                stock_val = max(0, int(stock))
             except ValueError:
                 stock_val = 0
             conn = get_db()

@@ -12,29 +12,52 @@
     </p>
 </section>
 
-{% if products|length == 0 %}
-    <p class="empty">Aucun produit pour le moment. Va dans l'espace <a href="{{ url_for('admin_panel') }}">Admin</a> pour en ajouter !</p>
-{% else %}
-<div class="grid">
-    {% for p in products %}
-    <div class="card">
-        <a href="{{ url_for('produit', product_id=p.id) }}" class="card-image-link">
-        {% if p.image %}
-        <img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" alt="{{ p.name }}">
-        {% else %}
-        <div class="no-image">Pas d'image</div>
-        {% endif %}
-        </a>
-        <h3><a href="{{ url_for('produit', product_id=p.id) }}" class="card-title-link">{{ p.name }}</a></h3>
-        <p class="price">{{ "%.2f"|format(p.price) }} €</p>
-        {% if p.stock is not none and p.stock <= 0 %}
-        <p class="stock out">Rupture de stock</p>
-        {% elif p.stock is not none %}
-        <p class="stock in">En stock ({{ p.stock }})</p>
-        {% endif %}
-        <a href="{{ url_for('acheter', product_id=p.id) }}" class="buy-btn">Acheter</a>
+<section class="story reveal">
+    <h2>Notre histoire</h2>
+    <p>Tout a commencé en 2014, sur une table pliante installée devant un garage. Hachemi y vendait trois fois rien : quelques fruits, deux ou trois objets trouvés en brocante, et surtout l'envie de connaître tout le monde dans la rue.</p>
+    <p>D'année en année, la table pliante est devenue une vitrine, puis un vrai rayon. Le principe n'a jamais changé : choisir chaque produit à la main, ne rien vendre qu'on ne recommanderait pas à un voisin, et garder cet esprit de quartier même en grandissant.</p>
+    <p>Aujourd'hui, Hachemi Market continue sur cette lancée — un peu plus grand, mais toujours aussi proche de ceux qui viennent y faire un tour.</p>
+    <p class="story-signature">— Hachemi, fondateur</p>
+</section>
+
+<section class="catalog reveal">
+    <h2>Le rayon</h2>
+    {% if products|length == 0 %}
+        <p class="empty">Aucun produit pour le moment. Va dans l'espace <a href="{{ url_for('admin_panel') }}">Admin</a> pour en ajouter !</p>
+    {% else %}
+    <div class="grid">
+        {% for p in products %}
+        <div class="card">
+            <a href="{{ url_for('produit', product_id=p.id) }}" class="card-image-link">
+            {% if p.image %}
+            <img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" alt="{{ p.name }}">
+            {% else %}
+            <div class="no-image">Pas d'image</div>
+            {% endif %}
+            </a>
+            <h3><a href="{{ url_for('produit', product_id=p.id) }}" class="card-title-link">{{ p.name }}</a></h3>
+            {% if promo_active %}
+            <p class="price">
+                <span class="old-price">{{ "%.2f"|format(p.price) }} €</span>
+                {{ "%.2f"|format(p.price * 0.9) }} €
+                <span class="promo-badge">-10%</span>
+            </p>
+            {% else %}
+            <p class="price">{{ "%.2f"|format(p.price) }} €</p>
+            {% endif %}
+            {% if p.stock <= 0 %}
+            <p class="stock out">Rupture de stock</p>
+            {% else %}
+            <p class="stock in">En stock ({{ p.stock }})</p>
+            {% endif %}
+            {% if p.stock <= 0 %}
+            <span class="buy-btn disabled">Indisponible</span>
+            {% else %}
+            <a href="{{ url_for('acheter', product_id=p.id) }}" class="buy-btn">Acheter</a>
+            {% endif %}
+        </div>
+        {% endfor %}
     </div>
-    {% endfor %}
-</div>
-{% endif %}
+    {% endif %}
+</section>
 {% endblock %}

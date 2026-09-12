@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Confirmation de commande{% endblock %}
 {% block content %}
-<div class="troll-box">
+<div class="troll-box reveal">
     {% if product %}
-    <h1>🎉 Merci pour votre commande !</h1>
+    <h1>Merci pour votre commande !</h1>
+    {% if promo_active %}
+    <p>Vous avez commandé <strong>{{ product.name }}</strong> pour <strong>{{ "%.2f"|format(product.price * 0.9) }} €</strong> <span class="promo-badge">-10% dimanche</span>.</p>
+    {% else %}
     <p>Vous avez commandé <strong>{{ product.name }}</strong> pour <strong>{{ "%.2f"|format(product.price) }} €</strong>.</p>
+    {% endif %}
     <p class="confirm-text">Votre commande a bien été enregistrée.</p>
     {% else %}
     <h1>Produit introuvable</h1>

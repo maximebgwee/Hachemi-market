@@ -3,7 +3,7 @@
 {% block content %}
 <a href="{{ url_for('index') }}" class="back-link">&larr; Retour à la boutique</a>
 
-<div class="product-page">
+<div class="product-page reveal">
     <div class="product-image">
         {% if product.image %}
         <img src="{{ url_for('static', filename='uploads/' ~ product.image) }}" alt="{{ product.name }}">
@@ -13,7 +13,16 @@
     </div>
     <div class="product-info">
         <h1>{{ product.name }}</h1>
+
+        {% if promo_active %}
+        <p class="price large">
+            <span class="old-price">{{ "%.2f"|format(product.price) }} €</span>
+            {{ "%.2f"|format(product.price * 0.9) }} €
+            <span class="promo-badge">-10%</span>
+        </p>
+        {% else %}
         <p class="price large">{{ "%.2f"|format(product.price) }} €</p>
+        {% endif %}
 
         {% if review_count > 0 %}
         <p class="avg-rating">{{ "★" * (avg_rating|round(0, 'floor')|int) }}{{ "☆" * (5 - (avg_rating|round(0, 'floor')|int)) }}
@@ -23,19 +32,23 @@
         <p class="avg-rating no-reviews">Aucun avis pour le moment</p>
         {% endif %}
 
-        {% if product.stock is not none and product.stock <= 0 %}
+        {% if product.stock <= 0 %}
         <p class="stock out">Rupture de stock</p>
-        {% elif product.stock is not none %}
+        {% else %}
         <p class="stock in">En stock ({{ product.stock }} restants)</p>
         {% endif %}
 
         <p class="description">{{ product.description or "Pas de description pour ce produit." }}</p>
 
+        {% if product.stock <= 0 %}
+        <span class="buy-btn large disabled">Indisponible</span>
+        {% else %}
         <a href="{{ url_for('acheter', product_id=product.id) }}" class="buy-btn large">Acheter</a>
+        {% endif %}
     </div>
 </div>
 
-<section class="reviews-section">
+<section class="reviews-section reveal">
     <h2>Avis et commentaires ({{ review_count }})</h2>
 
     {% if reviews|length == 0 %}
